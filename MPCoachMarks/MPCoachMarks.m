@@ -46,6 +46,7 @@ NSString *const kContinueLabelText = @"Tap to continue";
 @synthesize lblSpacing;
 @synthesize enableContinueLabel;
 @synthesize enableSkipButton;
+@synthesize closeOnCutOutTap;
 @synthesize continueLabelText;
 @synthesize skipButtonText;
 @synthesize arrowImage;
@@ -93,6 +94,7 @@ NSString *const kContinueLabelText = @"Tap to continue";
     self.enableSkipButton = kEnableSkipButton;
     self.continueLabelText = kContinueLabelText;
     self.skipButtonText = kSkipButtonText;
+    self.closeOnCutOutTap = NO;
     
     // Shape layer mask
     mask = [CAShapeLayer layer];
@@ -211,8 +213,12 @@ NSString *const kContinueLabelText = @"Tap to continue";
 }
 
 - (void)handleSingleTap:(UITapGestureRecognizer *)recognizer {
-    [self.delegate coachMarksViewDidClicked:self atIndex:markIndex];
-    [self cleanup:YES];
+    if (self.closeOnCutOutTap) {
+        [self.delegate coachMarksViewDidClicked:self atIndex:markIndex];
+        [self cleanup:YES];
+    } else {
+        [self goToCoachMarkIndexed:(markIndex+1)];
+    }
 }
 
 - (UIImage*)fetchImage:(NSString*)name {
@@ -239,7 +245,9 @@ NSString *const kContinueLabelText = @"Tap to continue";
     NSDictionary *markDef = [self.coachMarks objectAtIndex:index];
     NSString *markCaption = [markDef objectForKey:@"caption"];
     CGRect markRect = [[markDef objectForKey:@"rect"] CGRectValue];
-    
+    if( [markDef objectForKey:@"closeOnCutOutTap"])
+        self.closeOnCutOutTap = [[markDef objectForKey:@"closeOnCutOutTap"] boolValue];
+
     MaskShape shape = DEFAULT;
     if([[markDef allKeys] containsObject:@"shape"])
         shape = [[markDef objectForKey:@"shape"] integerValue];
